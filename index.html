@@ -7,19 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1117;
-    --surface: #181c27;
-    --surface2: #1f2436;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --accent: #4f8ef7;
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface2: #f0f3f7;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.15);
+    --accent: #2563eb;
     --accent2: #7c3aed;
-    --green: #22c55e;
-    --amber: #f59e0b;
-    --red: #ef4444;
-    --text: #f0f2f8;
-    --text2: #8b92a8;
-    --text3: #545c74;
+    --green: #16a34a;
+    --amber: #b45309;
+    --red: #dc2626;
+    --text: #111827;
+    --text2: #4b5563;
+    --text3: #9ca3af;
     --mono: 'DM Mono', monospace;
     --sans: 'DM Sans', sans-serif;
     --radius: 10px;
@@ -45,7 +45,7 @@
   .header-title { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
   .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
   .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-  .pill { font-size: 11px; font-family: var(--mono); padding: 4px 10px; border-radius: 99px; background: rgba(79,142,247,0.12); color: var(--accent); border: 0.5px solid rgba(79,142,247,0.25); }
+  .pill { font-size: 11px; font-family: var(--mono); padding: 4px 10px; border-radius: 99px; background: #eff6ff; color: var(--accent); border: 0.5px solid #bfdbfe; }
 
   /* MAIN LAYOUT */
   .main { padding: 24px 28px; max-width: 1400px; }
@@ -60,12 +60,11 @@
   .card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
     background: linear-gradient(90deg, var(--accent), var(--accent2));
-    opacity: 0;
-    transition: opacity 0.3s;
+    opacity: 0; transition: opacity 0.3s;
   }
   .card:hover::before { opacity: 1; }
   .card-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
-  .card-value { font-size: 24px; font-weight: 600; font-family: var(--mono); letter-spacing: -1px; }
+  .card-value { font-size: 22px; font-weight: 600; font-family: var(--mono); letter-spacing: -1px; color: var(--text); }
   .card-value.accent { color: var(--accent); }
   .card-value.green { color: var(--green); }
   .card-value.amber { color: var(--amber); }
@@ -79,26 +78,26 @@
   .search-wrap input:focus { border-color: var(--accent); }
   .search-wrap input::placeholder { color: var(--text3); }
   select { padding: 8px 12px; background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius); color: var(--text); font-family: var(--sans); font-size: 13px; outline: none; cursor: pointer; }
-  select option { background: var(--surface2); }
+  select option { background: var(--surface); color: var(--text); }
   .btn { padding: 8px 16px; border-radius: var(--radius); font-family: var(--sans); font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--border2); background: var(--surface); color: var(--text); transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
   .btn:hover { background: var(--surface2); border-color: var(--border2); }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
   .btn.primary:hover { opacity: 0.88; }
   .btn.export { background: transparent; border-color: var(--border2); color: var(--text2); }
   .btn.export:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); }
-
-  /* TABLE */
-  .table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 14px; padding: 3px 7px; border-radius: 6px; transition: all 0.15s; }
+  .del-btn:hover { color: var(--red); background: #fee2e2; }
+  .table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1300px; }
   thead th {
-    padding: 11px 12px; text-align: left;
-    font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.9px;
+    padding: 11px 10px; text-align: left;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.9px;
     color: var(--text3); border-bottom: 0.5px solid var(--border);
-    background: var(--surface); white-space: nowrap;
+    background: var(--surface2); white-space: nowrap; position: sticky; top: 0;
   }
   tbody tr { transition: background 0.12s; }
-  tbody tr:hover > td { background: rgba(255,255,255,0.025); }
-  tbody td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  tbody tr:hover > td { background: #f8faff; }
+  tbody td { padding: 9px 10px; border-bottom: 0.5px solid var(--border); vertical-align: middle; white-space: nowrap; }
   tbody tr:last-child > td { border-bottom: none; }
 
   td input {
@@ -106,9 +105,10 @@
     border-radius: 6px; padding: 4px 7px; color: var(--text);
     font-family: var(--sans); font-size: 13px; outline: none;
     transition: border-color 0.15s, background 0.15s;
+    min-width: 80px;
   }
-  td input:hover { border-color: var(--border2); background: var(--surface2); }
-  td input:focus { border-color: var(--accent); background: var(--surface2); }
+  td input:hover { border-color: var(--border2); background: #f0f4ff; }
+  td input:focus { border-color: var(--accent); background: #f0f4ff; }
   td input.date-input { font-family: var(--mono); font-size: 12px; letter-spacing: 0.3px; }
   td input.date-input::placeholder { color: var(--text3); font-family: var(--mono); }
 
@@ -119,62 +119,55 @@
   /* BADGES */
   .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 99px; }
   .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
-  .badge-active { background: rgba(34,197,94,0.12); color: #4ade80; border: 0.5px solid rgba(34,197,94,0.25); }
-  .badge-active::before { background: #22c55e; }
-  .badge-expired { background: rgba(239,68,68,0.12); color: #f87171; border: 0.5px solid rgba(239,68,68,0.25); }
-  .badge-expired::before { background: #ef4444; }
-  .badge-pending { background: rgba(245,158,11,0.12); color: #fbbf24; border: 0.5px solid rgba(245,158,11,0.25); }
-  .badge-pending::before { background: #f59e0b; }
+  .badge-active { background: #dcfce7; color: #15803d; border: 0.5px solid #86efac; }
+  .badge-active::before { background: #16a34a; }
+  .badge-expired { background: #fee2e2; color: #b91c1c; border: 0.5px solid #fca5a5; }
+  .badge-expired::before { background: #dc2626; }
+  .badge-pending { background: #fef3c7; color: #92400e; border: 0.5px solid #fcd34d; }
+  .badge-pending::before { background: #d97706; }
 
   /* EXPAND BUTTON */
-  .expand-btn { background: none; border: 0.5px solid var(--border); width: 22px; height: 22px; border-radius: 6px; cursor: pointer; color: var(--text3); font-size: 10px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-  .expand-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(79,142,247,0.08); }
+  .expand-btn { background: none; border: 0.5px solid var(--border2); width: 22px; height: 22px; border-radius: 6px; cursor: pointer; color: var(--text3); font-size: 10px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .expand-btn:hover { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
 
-  /* DELETE BUTTON */
-  .del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 14px; padding: 3px 7px; border-radius: 6px; transition: all 0.15s; }
-  .del-btn:hover { color: var(--red); background: rgba(239,68,68,0.1); }
-
-  /* SCHEDULE ROW */
-  .schedule-bg td { background: rgba(79,142,247,0.03) !important; padding: 0 !important; border-bottom: 0.5px solid var(--border); }
+  .schedule-bg td { background: #f8faff !important; padding: 0 !important; border-bottom: 0.5px solid var(--border); }
   .schedule-inner { padding: 14px 20px 16px 48px; }
   .schedule-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); margin-bottom: 10px; }
   .sched-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
   .sched-card {
-    background: var(--surface2); border: 0.5px solid var(--border);
+    background: #fff; border: 0.5px solid var(--border);
     border-radius: var(--radius); padding: 10px 12px;
     transition: border-color 0.15s;
   }
   .sched-card:hover { border-color: var(--border2); }
-  .sched-card.partial { border-left: 2px solid var(--amber); }
+  .sched-card.partial { border-left: 2px solid #d97706; }
   .sched-card.full { border-left: 2px solid var(--accent); }
-  .sched-card.current { border-color: var(--accent); background: rgba(79,142,247,0.07); }
+  .sched-card.current { border-color: var(--accent); background: #eff6ff; }
   .sched-month { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
   .sched-period { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-bottom: 6px; }
   .sched-amount { font-size: 15px; font-weight: 600; font-family: var(--mono); color: var(--text); }
   .sched-type { font-size: 10px; margin-top: 3px; }
-  .sched-type.partial { color: var(--amber); }
+  .sched-type.partial { color: #d97706; }
   .sched-type.full { color: var(--accent); }
   .sched-totals { margin-top: 12px; display: flex; gap: 20px; flex-wrap: wrap; }
   .sched-total-item { font-size: 11px; color: var(--text2); }
   .sched-total-item strong { color: var(--text); font-family: var(--mono); }
 
-  /* EMPTY STATE */
   .empty { padding: 56px 20px; text-align: center; color: var(--text3); }
   .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
   .empty p { font-size: 14px; color: var(--text2); margin-bottom: 6px; }
   .empty span { font-size: 12px; color: var(--text3); }
 
-  /* FOOTER */
-  .footer { padding: 14px 28px; border-top: 0.5px solid var(--border); display: flex; align-items: center; gap: 8px; color: var(--text3); font-size: 11px; font-family: var(--mono); }
+  .footer { padding: 14px 28px; border-top: 0.5px solid var(--border); background: var(--surface); display: flex; align-items: center; gap: 8px; color: var(--text3); font-size: 11px; font-family: var(--mono); }
   .footer-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text3); }
 
-  /* SCROLLBAR */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   @keyframes pulse {
-    0%, 100% { border-color: rgba(239,68,68,0.6); }
-    50% { border-color: rgba(239,68,68,1); box-shadow: 0 0 0 2px rgba(239,68,68,0.2); }
+    0%, 100% { border-color: rgba(220,38,38,0.6); }
+    50% { border-color: rgba(220,38,38,1); box-shadow: 0 0 0 2px rgba(220,38,38,0.15); }
   }
 </style>
 </head>
@@ -189,7 +182,7 @@
   <div class="header-right">
     <span class="pill">$3,607.00 per policy</span>
     <span class="pill" id="today-pill"></span>
-    <span class="pill" id="version-pill" onclick="showChangelog()" style="cursor:pointer;background:rgba(124,58,237,0.12);color:#a78bfa;border-color:rgba(124,58,237,0.3);" title="Click to see what's new">v1.8 · What's New</span>
+    <span class="pill" id="version-pill" onclick="showChangelog()" style="cursor:pointer;background:rgba(124,58,237,0.12);color:#a78bfa;border-color:rgba(124,58,237,0.3);" title="Click to see what's new">v1.9 · What's New</span>
     <span class="pill" id="save-pill" style="background:rgba(34,197,94,0.12);color:#4ade80;border-color:rgba(34,197,94,0.25);opacity:0;transition:opacity 0.5s;">✓ Saved</span>
   </div>
 </div>
@@ -262,20 +255,20 @@
     <table>
       <thead>
         <tr>
-          <th style="width:3%"></th>
-          <th style="width:8%">Policy #</th>
-          <th style="width:8%">CAB Number</th>
-          <th style="width:13%">Policy Holder</th>
-          <th style="width:9%">Start Date</th>
-          <th style="width:9%">End Date</th>
-          <th style="width:7%">Annual ($)</th>
-          <th style="width:7%">Daily Rate ($)</th>
-          <th style="width:8%">Prorated Total ($)</th>
-          <th style="width:8%">This Month ($)</th>
-          <th style="width:8%">Paid So Far ($)</th>
-          <th style="width:9%">Balance Owed ($)</th>
-          <th style="width:7%">Status</th>
-          <th style="width:3%"></th>
+          <th style="min-width:36px;width:36px;"></th>
+          <th style="min-width:100px;">Policy #</th>
+          <th style="min-width:110px;">CAB Number</th>
+          <th style="min-width:160px;">Policy Holder</th>
+          <th style="min-width:120px;">Start Date</th>
+          <th style="min-width:120px;">End Date</th>
+          <th style="min-width:100px;">Annual ($)</th>
+          <th style="min-width:100px;">Daily Rate ($)</th>
+          <th style="min-width:130px;">Prorated Total ($)</th>
+          <th style="min-width:120px;">This Month ($)</th>
+          <th style="min-width:120px;">Paid So Far ($)</th>
+          <th style="min-width:130px;">Balance Owed ($)</th>
+          <th style="min-width:90px;">Status</th>
+          <th style="min-width:36px;width:36px;"></th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -410,23 +403,15 @@ function calcRow(row){
   const today=new Date();today.setHours(0,0,0,0);
   const curMonthName=today.toLocaleString('default',{month:'short'})+' '+today.getFullYear();
   const curEntry=schedule.find(s=>s.month===curMonthName);
-
-  // Sum up Jan and Feb of the policy's start year as "paid" months
-  const janName='Jan '+year;
-  const febName='Feb '+year;
-  const janEntry=schedule.find(s=>s.month===janName);
-  const febEntry=schedule.find(s=>s.month===febName);
-  const paidJanFeb=(janEntry?janEntry.amount:0)+(febEntry?febEntry.amount:0);
-
-  // Balance = prorated total minus what was paid Jan–Feb
-  // If policy starts after Feb, paidJanFeb=0, full prorated total is owed
+  const paidMonths=row.paidMonths||[];
+  // Sum all manually marked paid months
+  const paidJanFeb=schedule.filter(s=>paidMonths.includes(s.month)).reduce((sum,s)=>sum+s.amount,0);
   const balance=proratedTotal-paidJanFeb;
-
   return{dailyRate,proratedTotal,currentMonth:curEntry?curEntry.amount:0,paidJanFeb,balance,schedule};
 }
 
 function addRow(){
-  rows.push({id:idCounter++,polnum:'',cab:'',holder:'',start:'',end:'',status:'',balanceOverride:null,balanceStale:false});
+  rows.push({id:idCounter++,polnum:'',cab:'',holder:'',start:'',end:'',status:'',balanceOverride:null,balanceStale:false,paidMonths:[]});
   render();
   // Focus first input of new row
   setTimeout(()=>{
@@ -487,6 +472,21 @@ function finalizeDate(input, id, field){
   }
   const s = parseDate(row.start), e = parseDate(row.end);
   row.status = autoStatus(s, e);
+  render();
+}
+
+function togglePaid(rowId, month){
+  const row = rows.find(r=>r.id===rowId);
+  if(!row) return;
+  if(!row.paidMonths) row.paidMonths=[];
+  const idx = row.paidMonths.indexOf(month);
+  if(idx>=0) row.paidMonths.splice(idx,1);
+  else row.paidMonths.push(month);
+  // Recalc balance from paidMonths, clear manual override
+  const c = calcRow(row);
+  row.balanceOverride = null;
+  row.balanceStale = false;
+  saveData();
   render();
 }
 
@@ -607,24 +607,30 @@ function render(){
     if(isExp&&c.schedule.length>0){
       const sr=document.createElement('tr');
       sr.className='schedule-bg';
+      const paidMonths = row.paidMonths||[];
       const cards=c.schedule.map(s=>{
-        const isPaid=s.month.startsWith('Jan ')||s.month.startsWith('Feb ');
+        const isPaid = paidMonths.includes(s.month);
+        const btnLabel = isPaid ? '✓ Paid — Unmark' : 'Mark as Paid';
+        const btnStyle = isPaid
+          ? 'background:rgba(34,197,94,0.12);color:#4ade80;border:0.5px solid rgba(34,197,94,0.3);'
+          : 'background:rgba(79,142,247,0.08);color:#4f8ef7;border:0.5px solid rgba(79,142,247,0.25);';
         return `
-        <div class="sched-card ${s.full?'full':'partial'} ${s.isCurrent?'current':''}" style="${isPaid?'opacity:0.55;':''}">
-          <div class="sched-month">${s.month}${s.isCurrent?' <span style="font-size:9px;color:var(--accent);font-weight:500;">● NOW</span>':''}${isPaid?' <span style="font-size:9px;color:var(--green);font-weight:500;">✓ PAID</span>':''}</div>
+        <div class="sched-card ${s.full?'full':'partial'} ${s.isCurrent?'current':''}" style="${isPaid?'opacity:0.65;':''}">
+          <div class="sched-month">${s.month}${s.isCurrent?' <span style="font-size:9px;color:var(--accent);font-weight:500;">● NOW</span>':''}${isPaid?' <span style="font-size:9px;color:#4ade80;font-weight:500;">✓ PAID</span>':''}</div>
           <div class="sched-period">${s.from} – ${s.to}</div>
           <div class="sched-amount" style="${isPaid?'text-decoration:line-through;color:var(--text3);':''}">${fmtMoney(s.amount)}</div>
           <div class="sched-type ${s.full?'full':'partial'}">${s.full?'Full month':'Partial · '+s.days+' days'}</div>
+          <button onclick="togglePaid(${row.id},'${s.month}')" style="margin-top:8px;width:100%;padding:4px 0;font-size:10px;font-family:inherit;border-radius:6px;cursor:pointer;font-weight:500;${btnStyle}">${btnLabel}</button>
         </div>`;
       }).join('');
       sr.innerHTML=`<td colspan="14"><div class="schedule-inner">
-        <div class="schedule-label">Monthly Billing Schedule</div>
+        <div class="schedule-label">Monthly Billing Schedule — click a month to mark as paid</div>
         <div class="sched-grid">${cards}</div>
         <div class="sched-totals">
           <div class="sched-total-item">Daily rate: <strong>${fmtMoney(c.dailyRate)}</strong></div>
           <div class="sched-total-item">Prorated total: <strong>${fmtMoney(c.proratedTotal)}</strong></div>
-          <div class="sched-total-item">Fixed full month: <strong>${fmtMoney(ANNUAL/12)}</strong></div>
-          <div class="sched-total-item">Paid (Jan–Feb): <strong style="color:var(--green);">${fmtMoney(c.paidJanFeb)}</strong></div>
+          <div class="sched-total-item">Months paid: <strong style="color:#4ade80;">${paidMonths.length} of ${c.schedule.length}</strong></div>
+          <div class="sched-total-item">Paid so far: <strong style="color:#4ade80;">${fmtMoney(c.paidJanFeb)}</strong></div>
           <div class="sched-total-item">Balance owed: <strong style="color:var(--amber);">${fmtMoney(c.balance)}</strong></div>
         </div>
       </div></td>`;
@@ -878,9 +884,16 @@ function importJSON(input){
 }
 
 // ── VERSION CHANGELOG ──────────────────────────────────────────
-const APP_VERSION = 'v1.8';
+const APP_VERSION = 'v1.9';
 const CHANGELOG = [
-  { version:'v1.8', date:'Mar 2026', label:'Latest', changes:[
+  { version:'v1.9', date:'Mar 2026', label:'Latest', changes:[
+    'Mark as Paid buttons on every month in the billing schedule',
+    'Clicking Mark as Paid deducts that month from Balance Owed instantly',
+    'Paid So Far and Balance Owed update automatically across the whole app',
+    'Click again to unmark a month if needed',
+    'Months paid counter shown in schedule footer (e.g. 2 of 10)',
+  ]},
+  { version:'v1.8', date:'Mar 2026', label:'', changes:[
     'Added version number & changelog (this screen)',
     'Smart Excel / CSV import with auto column detection',
     'Import supports .xlsx, .xls and .csv files',
