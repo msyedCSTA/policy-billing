@@ -257,6 +257,10 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
       Bulk Payment
     </button>
+    <button class="btn" onclick="payAllThisMonth()" style="border-color:#16a34a;color:#16a34a;background:#f0fdf4;font-weight:500;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Pay All This Month
+    </button>
   </div>
 
   <div class="table-wrap">
@@ -1297,6 +1301,37 @@ function showChangelog(){
     </div>`;
   modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
   document.body.appendChild(modal);
+}
+
+
+function payAllThisMonth(){
+  const today = new Date();
+  const curMonthName = today.toLocaleString('default',{month:'short'})+' '+today.getFullYear();
+  const filtered = getFiltered();
+  const eligible = filtered.filter(r=>{
+    const c = calcRow(r);
+    const alreadyPaid = (r.paidMonths||[]).includes(curMonthName);
+    return c.currentMonth > 0 && !alreadyPaid;
+  });
+  if(eligible.length===0){
+    alert(`All visible policies are already paid for ${curMonthName}, or have no amount due.`);
+    return;
+  }
+  const total = eligible.reduce((sum,r)=>sum+calcRow(r).currentMonth,0);
+  if(!confirm(`Mark ${curMonthName} as paid for ${eligible.length} polic${eligible.length===1?'y':'ies'}?\n\nTotal: ${fmtMoney(total)}\n\nEach policy will be marked paid using its current "This Month" amount.`)) return;
+  eligible.forEach(r=>{
+    if(!r.paidMonths) r.paidMonths=[];
+    if(!r.paidAmounts) r.paidAmounts={};
+    const c = calcRow(r);
+    if(!r.paidMonths.includes(curMonthName)) r.paidMonths.push(curMonthName);
+    r.paidAmounts[curMonthName] = c.currentMonth;
+    r.balanceOverride = null;
+    r.balanceStale = false;
+  });
+  saveData();
+  render();
+  const pill = document.getElementById('save-pill');
+  if(pill){ pill.textContent=`✓ ${curMonthName} paid for ${eligible.length} policies`; pill.style.opacity='1'; clearTimeout(pill._t); pill._t=setTimeout(()=>{ pill.style.opacity='0'; pill.textContent='✓ Saved'; },3000); }
 }
 
 // Load XLSX library dynamically then start app
