@@ -407,16 +407,12 @@ function calcRow(row){
   const curEntry=schedule.find(s=>s.month===curMonthName);
   const paidMonths=row.paidMonths||[];
   const paidAmounts=row.paidAmounts||{};
-  // If thisMonthOverride is set, inject it into paidAmounts for the current month
-  if(row.thisMonthOverride!=null && curEntry){
-    if(!paidMonths.includes(curEntry.month)) paidMonths.push(curEntry.month);
-    paidAmounts[curEntry.month] = row.thisMonthOverride;
-  }
+  // Sum all manually marked paid months (do NOT inject thisMonthOverride here)
   const paidJanFeb=schedule.filter(s=>paidMonths.includes(s.month)).reduce((sum,s)=>{
     return sum + (paidAmounts[s.month]!==undefined ? paidAmounts[s.month] : s.amount);
   },0);
   const balance=proratedTotal-paidJanFeb;
-  // currentMonth display: use override if set, else scheduled amount
+  // currentMonth display only: use override if set, else scheduled amount
   const currentMonth = row.thisMonthOverride!=null ? row.thisMonthOverride : (curEntry?curEntry.amount:0);
   return{dailyRate,proratedTotal,currentMonth,paidJanFeb,balance,schedule,curMonthName};
 }
@@ -490,13 +486,25 @@ function togglePaid(rowId, month){
   const row = rows.find(r=>r.id===rowId);
   if(!row) return;
   if(!row.paidMonths) row.paidMonths=[];
+  if(!row.paidAmounts) row.paidAmounts={};
+  const today=new Date();
+  const curMonthName=today.toLocaleString('default',{month:'short'})+' '+today.getFullYear();
   const idx = row.paidMonths.indexOf(month);
-  if(idx>=0) row.paidMonths.splice(idx,1);
-  else row.paidMonths.push(month);
-  // Recalc balance from paidMonths, clear manual override
-  const c = calcRow(row);
-  row.balanceOverride = null;
-  row.balanceStale = false;
+  if(idx>=0){
+    // Unmarking — remove from paidMonths and paidAmounts
+    row.paidMonths.splice(idx,1);
+    delete row.paidAmounts[month];
+    // If unmarking current month, also clear thisMonthOverride
+    if(month===curMonthName) row.thisMonthOverride=null;
+  } else {
+    // Marking as paid — use thisMonthOverride amount if it's current month
+    row.paidMonths.push(month);
+    if(month===curMonthName && row.thisMonthOverride!=null){
+      row.paidAmounts[month]=row.thisMonthOverride;
+    }
+  }
+  row.balanceOverride=null;
+  row.balanceStale=false;
   saveData();
   render();
 }
@@ -505,9 +513,7 @@ function updateField(id,field,val){
   const row=rows.find(r=>r.id===id);
   if(!row)return;
   if(field==='thisMonthOverride'){
-    row.thisMonthOverride = (val===''||val===null) ? null : parseFloat(val);
-    row.balanceOverride = null;
-    row.balanceStale = false;
+    row.thisMonthOverride = (val===''||val===null||val==='') ? null : parseFloat(val);
     render();
     return;
   }
