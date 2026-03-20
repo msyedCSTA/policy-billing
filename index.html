@@ -407,13 +407,31 @@ function calcRow(row){
   const curEntry=schedule.find(s=>s.month===curMonthName);
   const paidMonths=row.paidMonths||[];
   const paidAmounts=row.paidAmounts||{};
-  // Sum all manually marked paid months (do NOT inject thisMonthOverride here)
+  // Sum all manually marked paid months
   const paidJanFeb=schedule.filter(s=>paidMonths.includes(s.month)).reduce((sum,s)=>{
     return sum + (paidAmounts[s.month]!==undefined ? paidAmounts[s.month] : s.amount);
   },0);
   const balance=proratedTotal-paidJanFeb;
-  // currentMonth display only: use override if set, else scheduled amount
-  const currentMonth = row.thisMonthOverride!=null ? row.thisMonthOverride : (curEntry?curEntry.amount:0);
+
+  // Check if policy ends in the current month
+  const endsThisMonth = curEntry && end.getFullYear()===today.getFullYear() && end.getMonth()===today.getMonth();
+
+  // If policy ends this month, This Month = remaining balance (prorated - paid so far)
+  // Also update that month's schedule card to show the same amount
+  if(endsThisMonth && curEntry){
+    curEntry.amount = row.thisMonthOverride!=null ? row.thisMonthOverride : balance;
+  }
+
+  // currentMonth display: override > balance-for-ending-policies > scheduled amount
+  let currentMonth;
+  if(row.thisMonthOverride!=null){
+    currentMonth = row.thisMonthOverride;
+  } else if(endsThisMonth){
+    currentMonth = balance;
+  } else {
+    currentMonth = curEntry ? curEntry.amount : 0;
+  }
+
   return{dailyRate,proratedTotal,currentMonth,paidJanFeb,balance,schedule,curMonthName};
 }
 
