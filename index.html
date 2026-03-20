@@ -181,7 +181,7 @@
   <div class="header-right">
     <span class="pill">$3,607.00 per policy</span>
     <span class="pill" id="today-pill"></span>
-    <span class="pill" id="version-pill" onclick="showChangelog()" style="cursor:pointer;background:rgba(124,58,237,0.12);color:#7c3aed;border-color:rgba(124,58,237,0.3);" title="Click to see what's new">v2.0 · What's New</span>
+    <span class="pill" id="version-pill" onclick="showChangelog()" style="cursor:pointer;background:rgba(124,58,237,0.12);color:#7c3aed;border-color:rgba(124,58,237,0.3);" title="Click to see what's new">v2.1 · What's New</span>
     <span class="pill" id="save-pill" style="background:rgba(34,197,94,0.12);color:#4ade80;border-color:rgba(34,197,94,0.25);opacity:0;transition:opacity 0.5s;">✓ Saved</span>
   </div>
 </div>
@@ -406,17 +406,23 @@ function calcRow(row){
   const curMonthName=today.toLocaleString('default',{month:'short'})+' '+today.getFullYear();
   const curEntry=schedule.find(s=>s.month===curMonthName);
   const paidMonths=row.paidMonths||[];
-  const paidAmounts=row.paidAmounts||{}; // month -> custom paid amount
-  // Sum all paid months — use custom amount if set, otherwise schedule amount
+  const paidAmounts=row.paidAmounts||{};
+  // If thisMonthOverride is set, inject it into paidAmounts for the current month
+  if(row.thisMonthOverride!=null && curEntry){
+    if(!paidMonths.includes(curEntry.month)) paidMonths.push(curEntry.month);
+    paidAmounts[curEntry.month] = row.thisMonthOverride;
+  }
   const paidJanFeb=schedule.filter(s=>paidMonths.includes(s.month)).reduce((sum,s)=>{
     return sum + (paidAmounts[s.month]!==undefined ? paidAmounts[s.month] : s.amount);
   },0);
   const balance=proratedTotal-paidJanFeb;
-  return{dailyRate,proratedTotal,currentMonth:curEntry?curEntry.amount:0,paidJanFeb,balance,schedule};
+  // currentMonth display: use override if set, else scheduled amount
+  const currentMonth = row.thisMonthOverride!=null ? row.thisMonthOverride : (curEntry?curEntry.amount:0);
+  return{dailyRate,proratedTotal,currentMonth,paidJanFeb,balance,schedule,curMonthName};
 }
 
 function addRow(){
-  rows.push({id:idCounter++,polnum:'',cab:'',holder:'',start:'',end:'',status:'',balanceOverride:null,balanceStale:false,paidMonths:[],paidAmounts:{}});
+  rows.push({id:idCounter++,polnum:'',cab:'',holder:'',start:'',end:'',status:'',balanceOverride:null,balanceStale:false,paidMonths:[],paidAmounts:{},thisMonthOverride:null});
   render();
   // Focus first input of new row
   setTimeout(()=>{
@@ -498,7 +504,13 @@ function togglePaid(rowId, month){
 function updateField(id,field,val){
   const row=rows.find(r=>r.id===id);
   if(!row)return;
-  if(field==='balanceOverride'){
+  if(field==='thisMonthOverride'){
+    row.thisMonthOverride = (val===''||val===null) ? null : parseFloat(val);
+    row.balanceOverride = null; // let balance recalculate from paidMonths
+    row.balanceStale = false;
+    render();
+    return;
+  }
     row.balanceOverride = (val===''||val===null) ? null : parseFloat(val);
     row.balanceStale = false; // user has reviewed and updated it
     // Recompute paid cell in the same row without full re-render
@@ -593,7 +605,15 @@ function render(){
       <td><span class="dimmed">$3,607.00</span></td>
       <td><span class="dimmed">${c.dailyRate>0?fmtMoney(c.dailyRate):'—'}</span></td>
       <td><span class="em">${c.proratedTotal>0?fmtMoney(c.proratedTotal):'—'}</span></td>
-      <td><span class="em" style="color:var(--accent);">${c.currentMonth>0?fmtMoney(c.currentMonth):'—'}</span></td>
+      <td><input type="number" step="0.01" min="0"
+        value="${c.currentMonth>0 ? (row.thisMonthOverride!=null ? row.thisMonthOverride : c.currentMonth.toFixed(2)) : ''}"
+        placeholder="—"
+        onblur="updateField(${row.id},'thisMonthOverride',this.value)"
+        title="${row.thisMonthOverride!=null ? 'Custom amount — includes catch-up payment. Clear to reset.' : 'Auto-calculated. Edit to add catch-up payments.'}"
+        style="font-family:var(--mono);font-size:11px;font-weight:600;
+          color:${row.thisMonthOverride!=null?'#7c3aed':'var(--accent)'};
+          ${row.thisMonthOverride!=null?'border-color:rgba(124,58,237,0.4);background:rgba(124,58,237,0.05);':''}">
+      </td>
       <td><span class="em paid-cell" style="color:var(--green);">${c.proratedTotal>0?fmtMoney(c.proratedTotal - (row.balanceOverride!==null ? row.balanceOverride : c.balance)):'—'}</span></td>
       <td><input type="number" step="0.01" min="0"
         value="${c.proratedTotal>0 ? (row.balanceOverride!==null ? row.balanceOverride : c.balance.toFixed(2)) : ''}"
@@ -1060,9 +1080,16 @@ function applyBulkPayment(){
 }
 
 // ── VERSION CHANGELOG ──────────────────────────────────────────
-const APP_VERSION = 'v2.0';
+const APP_VERSION = 'v2.1';
 const CHANGELOG = [
-  { version:'v2.0', date:'Mar 2026', label:'Latest', changes:[
+  { version:'v2.1', date:'Mar 2026', label:'Latest', changes:[
+    'This Month column is now editable per policy',
+    'Enter a higher amount to include catch-up payments from missed months',
+    'Overridden amounts shown in purple — clear to reset to scheduled amount',
+    'Paid So Far and Balance Owed update automatically when This Month is edited',
+    'Premium This Month summary card reflects all custom amounts',
+  ]},
+  { version:'v2.0', date:'Mar 2026', label:'', changes:[
     'Bulk Payment tool — filter by start date, select policies & months',
     'Enter custom amount paid per month (e.g. $301 instead of $300.58)',
     'Select all or individual policies for mass payment entry',
