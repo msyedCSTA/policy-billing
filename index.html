@@ -293,6 +293,7 @@
   <span id="footer-count">0 policies</span>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const ANNUAL = 3607;
 const STORAGE_KEY = 'policy_billing_db_v1';
@@ -694,9 +695,7 @@ function downloadCSV(){
   a.download='policy_billing_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
-</script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script>
+
 // Smart Excel/CSV import with fuzzy column detection
 const COL_ALIASES = {
   polnum:  ['policy#','policy #','policy no','policy number','pol#','pol no','polno','policyno','policynumber'],
@@ -1217,6 +1216,7 @@ function showChangelog(){
 
 loadData();
 render();
+
 </script>
 </body>
 </html>
