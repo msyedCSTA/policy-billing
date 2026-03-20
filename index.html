@@ -963,28 +963,36 @@ function showBulkPayment(){
   let existing = document.getElementById('bulk-modal');
   if(existing){ existing.remove(); return; }
 
-  // Get unique start dates for filter
+  // Get unique start and end dates for filters
   const startDates = [...new Set(rows.map(r=>r.start).filter(Boolean))].sort();
+  const endDates = [...new Set(rows.map(r=>r.end).filter(Boolean))].sort();
 
   const modal = document.createElement('div');
   modal.id = 'bulk-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;';
   modal.innerHTML = `
-    <div style="background:#fff;border:0.5px solid #e5e7eb;border-radius:14px;padding:28px;width:90%;max-width:680px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+    <div style="background:#fff;border:0.5px solid #e5e7eb;border-radius:14px;padding:28px;width:90%;max-width:740px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
         <div>
           <div style="font-size:16px;font-weight:600;color:#111827;">Bulk Payment Entry</div>
-          <div style="font-size:12px;color:#6b7280;margin-top:2px;">Filter policies by start date, select months, enter amount paid</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:2px;">Filter policies by start or end date, select months, enter amount paid</div>
         </div>
         <button onclick="document.getElementById('bulk-modal').remove()" style="background:none;border:0.5px solid #e5e7eb;color:#6b7280;border-radius:8px;padding:5px 12px;cursor:pointer;font-family:inherit;">Close</button>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
         <div>
           <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;display:block;margin-bottom:5px;">Filter by Start Date</label>
           <select id="bp-start-filter" onchange="bpUpdateList()" style="width:100%;padding:8px 10px;border:0.5px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:13px;color:#111827;background:#fff;">
             <option value="">All start dates</option>
             ${startDates.map(d=>`<option value="${d}">${d}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;display:block;margin-bottom:5px;">Filter by End Date</label>
+          <select id="bp-end-filter" onchange="bpUpdateList()" style="width:100%;padding:8px 10px;border:0.5px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:13px;color:#111827;background:#fff;">
+            <option value="">All end dates</option>
+            ${endDates.map(d=>`<option value="${d}">${d}</option>`).join('')}
           </select>
         </div>
         <div>
@@ -1042,7 +1050,12 @@ function showBulkPayment(){
 
 function bpGetFilteredRows(){
   const startFilter = document.getElementById('bp-start-filter').value;
-  return rows.filter(r => !startFilter || r.start === startFilter);
+  const endFilter = document.getElementById('bp-end-filter') ? document.getElementById('bp-end-filter').value : '';
+  return rows.filter(r => {
+    const matchStart = !startFilter || r.start === startFilter;
+    const matchEnd = !endFilter || r.end === endFilter;
+    return matchStart && matchEnd;
+  });
 }
 
 function bpUpdateList(){
