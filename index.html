@@ -889,23 +889,49 @@ function importJSON(input){
   const reader = new FileReader();
   reader.onload = function(e){
     try{
-      const parsed = JSON.parse(e.target.result);
-      if(!parsed.rows || !Array.isArray(parsed.rows)){
-        alert('Invalid backup file — could not find policy data.');
-        return;
+      let raw = e.target.result;
+      // Strip BOM if present
+      if(raw.charCodeAt(0)===0xFEFF) raw = raw.slice(1);
+      const parsed = JSON.parse(raw);
+      // Accept both {rows:[...]} and a plain array
+      let importedRows = null;
+      let importedCounter = null;
+      if(parsed && Array.isArray(parsed.rows)){
+        importedRows = parsed.rows;
+        importedCounter = parsed.idCounter || null;
+      } else if(Array.isArray(parsed)){
+        importedRows = parsed;
       }
-      if(!confirm(`This will replace your current ${rows.length} polic${rows.length===1?'y':'ies'} with ${parsed.rows.length} from the backup.\n\nContinue?`)){
+      if(!importedRows || importedRows.length===0){
+        alert('No policy data found in this file.\n\nMake sure you are using a JSON backup exported from this app.');
         input.value=''; return;
       }
-      rows = parsed.rows;
-      idCounter = parsed.idCounter || (rows.length + 1);
+      // Patch any missing fields so older backups work with newer app
+      importedRows = importedRows.map((r,i)=>({
+        id: r.id || (i+1),
+        polnum: r.polnum||'',
+        cab: r.cab||'',
+        holder: r.holder||'',
+        start: r.start||'',
+        end: r.end||'',
+        status: r.status||'',
+        balanceOverride: r.balanceOverride!==undefined ? r.balanceOverride : null,
+        balanceStale: r.balanceStale||false,
+        paidMonths: r.paidMonths||[],
+        paidAmounts: r.paidAmounts||{},
+        thisMonthOverride: r.thisMonthOverride!==undefined ? r.thisMonthOverride : null,
+      }));
+      if(!confirm(`Ready to restore ${importedRows.length} polic${importedRows.length===1?'y':'ies'} from backup.\n\nThis will replace your current data. Continue?`)){
+        input.value=''; return;
+      }
+      rows = importedRows;
+      idCounter = importedCounter || (Math.max(...importedRows.map(r=>r.id||0))+1);
       saveData();
       render();
-      // Flash a confirmation
       const pill = document.getElementById('save-pill');
-      if(pill){ pill.textContent='✓ Restored'; pill.style.opacity='1'; clearTimeout(pill._t); pill._t=setTimeout(()=>{ pill.style.opacity='0'; pill.textContent='✓ Saved'; },2500); }
+      if(pill){ pill.textContent=`✓ Restored ${rows.length} policies`; pill.style.opacity='1'; clearTimeout(pill._t); pill._t=setTimeout(()=>{ pill.style.opacity='0'; pill.textContent='✓ Saved'; },3000); }
     }catch(err){
-      alert('Could not read backup file. Make sure it is a valid JSON backup from this app.');
+      alert('Could not read backup file.\n\nError: '+err.message+'\n\nMake sure you are selecting the .json file exported from this app.');
     }
     input.value='';
   };
