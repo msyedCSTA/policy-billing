@@ -506,14 +506,14 @@ function updateField(id,field,val){
   if(!row)return;
   if(field==='thisMonthOverride'){
     row.thisMonthOverride = (val===''||val===null) ? null : parseFloat(val);
-    row.balanceOverride = null; // let balance recalculate from paidMonths
+    row.balanceOverride = null;
     row.balanceStale = false;
     render();
     return;
   }
+  if(field==='balanceOverride'){
     row.balanceOverride = (val===''||val===null) ? null : parseFloat(val);
-    row.balanceStale = false; // user has reviewed and updated it
-    // Recompute paid cell in the same row without full re-render
+    row.balanceStale = false;
     const c = calcRow(row);
     const effectiveBalance = row.balanceOverride!==null ? row.balanceOverride : c.balance;
     const effectivePaid = c.proratedTotal > 0 ? (c.proratedTotal - effectiveBalance) : 0;
