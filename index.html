@@ -226,6 +226,12 @@
       <option value="Expired">Expired</option>
       <option value="Pending">Pending</option>
     </select>
+    <select id="filter-start" onchange="render()">
+      <option value="">All start dates</option>
+    </select>
+    <select id="filter-end" onchange="render()">
+      <option value="">All end dates</option>
+    </select>
     <button class="btn primary" onclick="addRow()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
       Add Policy
@@ -581,12 +587,26 @@ function deleteRow(id){
 }
 function toggleExpand(id){expanded[id]=!expanded[id];render();}
 
+function populateFilters(){
+  const startSel = document.getElementById('filter-start');
+  const endSel = document.getElementById('filter-end');
+  if(!startSel||!endSel) return;
+  const curStart = startSel.value;
+  const curEnd = endSel.value;
+  const startDates = [...new Set(rows.map(r=>r.start).filter(Boolean))].sort();
+  const endDates = [...new Set(rows.map(r=>r.end).filter(Boolean))].sort();
+  startSel.innerHTML = '<option value="">All start dates</option>' + startDates.map(d=>`<option value="${d}"${d===curStart?' selected':''}>${d}</option>`).join('');
+  endSel.innerHTML = '<option value="">All end dates</option>' + endDates.map(d=>`<option value="${d}"${d===curEnd?' selected':''}>${d}</option>`).join('');
+}
+
 function getFiltered(){
   const q=document.getElementById('search').value.toLowerCase();
   const fs=document.getElementById('filter-status').value;
+  const fstart=document.getElementById('filter-start').value;
+  const fend=document.getElementById('filter-end').value;
   return rows.filter(r=>{
     const match=!q||r.cab.toLowerCase().includes(q)||r.holder.toLowerCase().includes(q)||r.polnum.toLowerCase().includes(q);
-    return match&&(!fs||r.status===fs);
+    return match&&(!fs||r.status===fs)&&(!fstart||r.start===fstart)&&(!fend||r.end===fend);
   });
 }
 
@@ -719,6 +739,7 @@ function render(){
     }
   });
   renderSummary();
+  populateFilters();
   saveData();
 }
 
