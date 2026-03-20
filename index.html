@@ -182,7 +182,7 @@
   <div class="header-right">
     <span class="pill">$3,607.00 per policy</span>
     <span class="pill" id="today-pill"></span>
-    <span class="pill" id="version-pill" onclick="showChangelog()" style="cursor:pointer;background:rgba(124,58,237,0.12);color:#a78bfa;border-color:rgba(124,58,237,0.3);" title="Click to see what's new">v1.9 · What's New</span>
+    <span class="pill" id="version-pill" onclick="showChangelog()" style="cursor:pointer;background:rgba(124,58,237,0.12);color:#7c3aed;border-color:rgba(124,58,237,0.3);" title="Click to see what's new">v2.0 · What's New</span>
     <span class="pill" id="save-pill" style="background:rgba(34,197,94,0.12);color:#4ade80;border-color:rgba(34,197,94,0.25);opacity:0;transition:opacity 0.5s;">✓ Saved</span>
   </div>
 </div>
@@ -248,7 +248,10 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Import Excel / CSV
     </button>
-    <input type="file" id="excel-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(this)">
+    <button class="btn" onclick="showBulkPayment()" style="border-color:#7c3aed;color:#7c3aed;background:#faf5ff;font-weight:500;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      Bulk Payment
+    </button>
   </div>
 
   <div class="table-wrap">
@@ -404,14 +407,17 @@ function calcRow(row){
   const curMonthName=today.toLocaleString('default',{month:'short'})+' '+today.getFullYear();
   const curEntry=schedule.find(s=>s.month===curMonthName);
   const paidMonths=row.paidMonths||[];
-  // Sum all manually marked paid months
-  const paidJanFeb=schedule.filter(s=>paidMonths.includes(s.month)).reduce((sum,s)=>sum+s.amount,0);
+  const paidAmounts=row.paidAmounts||{}; // month -> custom paid amount
+  // Sum all paid months — use custom amount if set, otherwise schedule amount
+  const paidJanFeb=schedule.filter(s=>paidMonths.includes(s.month)).reduce((sum,s)=>{
+    return sum + (paidAmounts[s.month]!==undefined ? paidAmounts[s.month] : s.amount);
+  },0);
   const balance=proratedTotal-paidJanFeb;
   return{dailyRate,proratedTotal,currentMonth:curEntry?curEntry.amount:0,paidJanFeb,balance,schedule};
 }
 
 function addRow(){
-  rows.push({id:idCounter++,polnum:'',cab:'',holder:'',start:'',end:'',status:'',balanceOverride:null,balanceStale:false,paidMonths:[]});
+  rows.push({id:idCounter++,polnum:'',cab:'',holder:'',start:'',end:'',status:'',balanceOverride:null,balanceStale:false,paidMonths:[],paidAmounts:{}});
   render();
   // Focus first input of new row
   setTimeout(()=>{
@@ -608,17 +614,21 @@ function render(){
       const sr=document.createElement('tr');
       sr.className='schedule-bg';
       const paidMonths = row.paidMonths||[];
+      const paidAmounts = row.paidAmounts||{};
       const cards=c.schedule.map(s=>{
         const isPaid = paidMonths.includes(s.month);
+        const customAmt = paidAmounts[s.month];
+        const displayAmt = (isPaid && customAmt!==undefined) ? customAmt : s.amount;
         const btnLabel = isPaid ? '✓ Paid — Unmark' : 'Mark as Paid';
         const btnStyle = isPaid
-          ? 'background:rgba(34,197,94,0.12);color:#4ade80;border:0.5px solid rgba(34,197,94,0.3);'
-          : 'background:rgba(79,142,247,0.08);color:#4f8ef7;border:0.5px solid rgba(79,142,247,0.25);';
+          ? 'background:#dcfce7;color:#15803d;border:0.5px solid #86efac;'
+          : 'background:#eff6ff;color:#2563eb;border:0.5px solid #bfdbfe;';
         return `
-        <div class="sched-card ${s.full?'full':'partial'} ${s.isCurrent?'current':''}" style="${isPaid?'opacity:0.65;':''}">
-          <div class="sched-month">${s.month}${s.isCurrent?' <span style="font-size:9px;color:var(--accent);font-weight:500;">● NOW</span>':''}${isPaid?' <span style="font-size:9px;color:#4ade80;font-weight:500;">✓ PAID</span>':''}</div>
+        <div class="sched-card ${s.full?'full':'partial'} ${s.isCurrent?'current':''}" style="${isPaid?'opacity:0.7;':''}">
+          <div class="sched-month">${s.month}${s.isCurrent?' <span style="font-size:9px;color:var(--accent);font-weight:500;">● NOW</span>':''}${isPaid?' <span style="font-size:9px;color:#16a34a;font-weight:500;">✓ PAID</span>':''}</div>
           <div class="sched-period">${s.from} – ${s.to}</div>
-          <div class="sched-amount" style="${isPaid?'text-decoration:line-through;color:var(--text3);':''}">${fmtMoney(s.amount)}</div>
+          <div class="sched-amount" style="${isPaid?'text-decoration:line-through;color:#9ca3af;':''}">${fmtMoney(s.amount)}</div>
+          ${isPaid && customAmt!==undefined ? `<div style="font-size:12px;font-weight:600;color:#16a34a;font-family:var(--mono);">Paid: ${fmtMoney(customAmt)}</div>` : ''}
           <div class="sched-type ${s.full?'full':'partial'}">${s.full?'Full month':'Partial · '+s.days+' days'}</div>
           <button onclick="togglePaid(${row.id},'${s.month}')" style="margin-top:8px;width:100%;padding:4px 0;font-size:10px;font-family:inherit;border-radius:6px;cursor:pointer;font-weight:500;${btnStyle}">${btnLabel}</button>
         </div>`;
@@ -883,10 +893,184 @@ function importJSON(input){
   reader.readAsText(file);
 }
 
+
+// ── BULK PAYMENT ───────────────────────────────────────────────
+function showBulkPayment(){
+  let existing = document.getElementById('bulk-modal');
+  if(existing){ existing.remove(); return; }
+
+  // Get unique start dates for filter
+  const startDates = [...new Set(rows.map(r=>r.start).filter(Boolean))].sort();
+
+  const modal = document.createElement('div');
+  modal.id = 'bulk-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;';
+  modal.innerHTML = `
+    <div style="background:#fff;border:0.5px solid #e5e7eb;border-radius:14px;padding:28px;width:90%;max-width:680px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <div style="font-size:16px;font-weight:600;color:#111827;">Bulk Payment Entry</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:2px;">Filter policies by start date, select months, enter amount paid</div>
+        </div>
+        <button onclick="document.getElementById('bulk-modal').remove()" style="background:none;border:0.5px solid #e5e7eb;color:#6b7280;border-radius:8px;padding:5px 12px;cursor:pointer;font-family:inherit;">Close</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div>
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;display:block;margin-bottom:5px;">Filter by Start Date</label>
+          <select id="bp-start-filter" onchange="bpUpdateList()" style="width:100%;padding:8px 10px;border:0.5px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:13px;color:#111827;background:#fff;">
+            <option value="">All start dates</option>
+            ${startDates.map(d=>`<option value="${d}">${d}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;display:block;margin-bottom:5px;">Months to Mark Paid</label>
+          <select id="bp-month" style="width:100%;padding:8px 10px;border:0.5px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:13px;color:#111827;background:#fff;" multiple size="4">
+            <option value="Jan 2026">Jan 2026</option>
+            <option value="Feb 2026">Feb 2026</option>
+            <option value="Mar 2026">Mar 2026</option>
+            <option value="Apr 2026">Apr 2026</option>
+            <option value="May 2026">May 2026</option>
+            <option value="Jun 2026">Jun 2026</option>
+            <option value="Jul 2026">Jul 2026</option>
+            <option value="Aug 2026">Aug 2026</option>
+            <option value="Sep 2026">Sep 2026</option>
+            <option value="Oct 2026">Oct 2026</option>
+            <option value="Nov 2026">Nov 2026</option>
+            <option value="Dec 2026">Dec 2026</option>
+          </select>
+          <div style="font-size:10px;color:#9ca3af;margin-top:3px;">Hold Ctrl/Cmd to select multiple</div>
+        </div>
+        <div>
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;display:block;margin-bottom:5px;">Amount Paid Per Month ($)</label>
+          <input type="number" id="bp-amount" placeholder="e.g. 301.00" step="0.01" min="0"
+            style="width:100%;padding:8px 10px;border:0.5px solid #d1d5db;border-radius:8px;font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:#111827;outline:none;"
+            onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#d1d5db'">
+          <div style="font-size:10px;color:#9ca3af;margin-top:3px;">Leave blank to use scheduled amount</div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;margin-bottom:8px;">
+        Select Policies <span id="bp-count" style="color:#2563eb;font-weight:600;"></span>
+      </div>
+      <div style="border:0.5px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:16px;">
+        <div style="background:#f9fafb;padding:8px 12px;border-bottom:0.5px solid #e5e7eb;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="bp-select-all" onchange="bpToggleAll(this.checked)" style="width:15px;height:15px;cursor:pointer;">
+          <label for="bp-select-all" style="font-size:12px;font-weight:500;color:#374151;cursor:pointer;">Select All</label>
+        </div>
+        <div id="bp-list" style="max-height:220px;overflow-y:auto;"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
+        <div id="bp-preview" style="font-size:12px;color:#6b7280;flex:1;"></div>
+        <button onclick="document.getElementById('bulk-modal').remove()" style="padding:9px 18px;border-radius:8px;border:0.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;font-family:inherit;">Cancel</button>
+        <button onclick="applyBulkPayment()" style="padding:9px 20px;border-radius:8px;border:none;background:#7c3aed;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;font-size:13px;">Apply Payment</button>
+      </div>
+    </div>`;
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+  bpUpdateList();
+
+  // Live preview update
+  modal.querySelector('#bp-amount').addEventListener('input', bpUpdatePreview);
+  modal.querySelector('#bp-month').addEventListener('change', bpUpdatePreview);
+}
+
+function bpGetFilteredRows(){
+  const startFilter = document.getElementById('bp-start-filter').value;
+  return rows.filter(r => !startFilter || r.start === startFilter);
+}
+
+function bpUpdateList(){
+  const filtered = bpGetFilteredRows();
+  const list = document.getElementById('bp-list');
+  if(!list) return;
+  if(filtered.length===0){
+    list.innerHTML='<div style="padding:16px;text-align:center;color:#9ca3af;font-size:13px;">No policies match this filter</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(r=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:0.5px solid #f3f4f6;">
+      <input type="checkbox" class="bp-check" data-id="${r.id}" checked style="width:15px;height:15px;cursor:pointer;" onchange="bpUpdatePreview()">
+      <span style="font-family:'DM Mono',monospace;font-size:12px;color:#2563eb;min-width:80px;">${r.cab||'—'}</span>
+      <span style="font-size:13px;color:#111827;flex:1;">${r.holder||'—'}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:#6b7280;">${r.start||'—'}</span>
+    </div>`).join('');
+  // Select all checkbox state
+  const allBox = document.getElementById('bp-select-all');
+  if(allBox) allBox.checked = true;
+  bpUpdatePreview();
+}
+
+function bpToggleAll(checked){
+  document.querySelectorAll('.bp-check').forEach(cb=>cb.checked=checked);
+  bpUpdatePreview();
+}
+
+function bpUpdatePreview(){
+  const selected = [...document.querySelectorAll('.bp-check:checked')];
+  const monthSel = document.getElementById('bp-month');
+  const months = monthSel ? [...monthSel.selectedOptions].map(o=>o.value) : [];
+  const amt = parseFloat(document.getElementById('bp-amount')?.value)||0;
+  const countEl = document.getElementById('bp-count');
+  const previewEl = document.getElementById('bp-preview');
+  if(countEl) countEl.textContent = `— ${selected.length} selected`;
+  if(previewEl){
+    if(selected.length>0 && months.length>0){
+      const total = amt>0 ? amt*months.length*selected.length : 0;
+      previewEl.innerHTML = `<span style="color:#7c3aed;font-weight:500;">${selected.length} polic${selected.length===1?'y':'ies'} · ${months.length} month${months.length===1?'':'s'}${amt>0?' · '+fmtMoney(amt)+'/month · Total: '+fmtMoney(total):''}</span>`;
+    } else {
+      previewEl.textContent = '';
+    }
+  }
+}
+
+function applyBulkPayment(){
+  const selected = [...document.querySelectorAll('.bp-check:checked')].map(cb=>+cb.getAttribute('data-id'));
+  const monthSel = document.getElementById('bp-month');
+  const months = [...monthSel.selectedOptions].map(o=>o.value);
+  const amtInput = parseFloat(document.getElementById('bp-amount').value);
+  const customAmt = isNaN(amtInput) ? null : amtInput;
+
+  if(selected.length===0){ alert('Please select at least one policy.'); return; }
+  if(months.length===0){ alert('Please select at least one month.'); return; }
+
+  const summary = `Apply payment to ${selected.length} polic${selected.length===1?'y':'ies'} for ${months.join(', ')}${customAmt!==null?' at '+fmtMoney(customAmt)+'/month':''}?\n\nThis will mark those months as paid and update balances.`;
+  if(!confirm(summary)) return;
+
+  selected.forEach(id=>{
+    const row = rows.find(r=>r.id===id);
+    if(!row) return;
+    if(!row.paidMonths) row.paidMonths=[];
+    if(!row.paidAmounts) row.paidAmounts={};
+    months.forEach(m=>{
+      if(!row.paidMonths.includes(m)) row.paidMonths.push(m);
+      if(customAmt!==null) row.paidAmounts[m] = customAmt;
+      else delete row.paidAmounts[m];
+    });
+    row.balanceOverride = null;
+    row.balanceStale = false;
+  });
+
+  document.getElementById('bulk-modal').remove();
+  saveData();
+  render();
+
+  const pill = document.getElementById('save-pill');
+  if(pill){ pill.textContent=`✓ Payment applied to ${selected.length} polic${selected.length===1?'y':'ies'}`; pill.style.opacity='1'; clearTimeout(pill._t); pill._t=setTimeout(()=>{ pill.style.opacity='0'; pill.textContent='✓ Saved'; },3000); }
+}
+
 // ── VERSION CHANGELOG ──────────────────────────────────────────
-const APP_VERSION = 'v1.9';
+const APP_VERSION = 'v2.0';
 const CHANGELOG = [
-  { version:'v1.9', date:'Mar 2026', label:'Latest', changes:[
+  { version:'v2.0', date:'Mar 2026', label:'Latest', changes:[
+    'Bulk Payment tool — filter by start date, select policies & months',
+    'Enter custom amount paid per month (e.g. $301 instead of $300.58)',
+    'Select all or individual policies for mass payment entry',
+    'Paid So Far and Balance Owed update instantly for all selected policies',
+    'Individual schedule cards show actual amount paid vs scheduled amount',
+  ]},
+  { version:'v1.9', date:'Mar 2026', label:'', changes:[
     'Mark as Paid buttons on every month in the billing schedule',
     'Clicking Mark as Paid deducts that month from Balance Owed instantly',
     'Paid So Far and Balance Owed update automatically across the whole app',
