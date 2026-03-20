@@ -293,7 +293,6 @@
   <span id="footer-count">0 policies</span>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const ANNUAL = 3607;
 const STORAGE_KEY = 'policy_billing_db_v1';
@@ -1214,9 +1213,16 @@ function showChangelog(){
   document.body.appendChild(modal);
 }
 
-loadData();
-render();
-
+// Load XLSX library dynamically then start app
+function startApp(){
+  loadData();
+  render();
+}
+var xlsxScript = document.createElement('script');
+xlsxScript.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+xlsxScript.onload = startApp;
+xlsxScript.onerror = startApp; // start even if XLSX fails (CSV/JSON still work)
+document.head.appendChild(xlsxScript);
 </script>
 </body>
 </html>
