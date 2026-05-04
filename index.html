@@ -855,9 +855,7 @@ function confirmDownloadCSV(){
   const headers=['Policy #','CAB Number','Policy Holder','Start Date','End Date','Annual Premium ($)','Daily Rate ($)','Prorated Total ($)',`This Month - ${monthName||'Current'} ($)`,'Paid So Far ($)','Balance Owed ($)','Status'];
   const csvRows=[headers.join(',')];
 
-  rows.forEach(r=>{
-    const c=calcRow(r);
-    const effectiveBal = r.balanceOverride!==null ? r.balanceOverride : (c.balance||0);
+  getFiltered().forEach(r=>{
     const effectivePd = c.proratedTotal>0 ? (c.proratedTotal - effectiveBal) : 0;
 
     // Get this month amount for the selected month
