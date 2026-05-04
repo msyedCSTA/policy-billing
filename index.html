@@ -353,6 +353,7 @@ function autoFmtDate(raw){
 }
 function fmtDate(d){if(!d)return '';return (d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0')+'/'+d.getFullYear();}
 function fmtMoney(n){return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function round2(n){return Math.round(n*100)/100;}
 function daysBetweenInclusive(a,b){return Math.round((b-a)/86400000)+1;}
 
 function autoEndDate(s){
@@ -387,9 +388,9 @@ function buildSchedule(startDate, endDate){
     const isFullMonth=cursor.getDate()===1&&periodEnd.getDate()===daysInMonth(y,m+1);
     const isLastPeriod=periodEnd>=endDate;
     let amount;
-    if(isLastPeriod){amount=remaining;}
-    else if(isFullMonth){amount=ANNUAL/12;}
-    else{const days=daysBetweenInclusive(cursor,periodEnd);amount=dailyRate*days;}
+    if(isLastPeriod){amount=round2(remaining);}
+    else if(isFullMonth){amount=round2(ANNUAL/12);}
+    else{const days=daysBetweenInclusive(cursor,periodEnd);amount=round2(dailyRate*days);}
     remaining-=amount;
     const isCurrent=today>=cursor&&today<=periodEnd;
     schedule.push({
@@ -446,12 +447,17 @@ function calcRow(row){
 }
 
 function addRow(){
-  rows.push({id:idCounter++,polnum:'',cab:'',holder:'',start:'',end:'',status:'',balanceOverride:null,balanceStale:false,paidMonths:[],paidAmounts:{},thisMonthOverride:null});
+  rows.unshift({id:idCounter++,polnum:'',cab:'',holder:'',start:'',end:'',status:'',balanceOverride:null,balanceStale:false,paidMonths:[],paidAmounts:{},thisMonthOverride:null});
+  // Clear search and filters so new row is visible at top
+  const searchEl=document.getElementById('search');
+  if(searchEl) searchEl.value='';
+  document.getElementById('filter-start').value='';
+  document.getElementById('filter-end').value='';
+  document.getElementById('filter-status').value='';
   render();
-  // Focus first input of new row
   setTimeout(()=>{
-    const inputs=document.querySelectorAll('#tbody tr:last-child td input');
-    if(inputs[0])inputs[0].focus();
+    const inputs=document.querySelectorAll('#tbody tr:first-child td input');
+    if(inputs[1]) inputs[1].focus();
   },50);
 }
 
@@ -519,7 +525,7 @@ function setScheduleAmount(rowId, month, val){
     // Clear custom amount — revert to scheduled
     delete row.paidAmounts[month];
   } else {
-    row.paidAmounts[month] = parsed;
+    row.paidAmounts[month] = round2(parsed);
     // If this month is already marked paid, update the paid amount too
   }
   row.balanceOverride = null;
@@ -546,7 +552,7 @@ function togglePaid(rowId, month){
     // Marking as paid — use thisMonthOverride amount if it's current month
     row.paidMonths.push(month);
     if(month===curMonthName && row.thisMonthOverride!=null){
-      row.paidAmounts[month]=row.thisMonthOverride;
+      row.paidAmounts[month]=round2(row.thisMonthOverride);
     }
   }
   row.balanceOverride=null;
@@ -1237,7 +1243,7 @@ function applyBulkPayment(){
     if(!row.paidAmounts) row.paidAmounts={};
     months.forEach(m=>{
       if(!row.paidMonths.includes(m)) row.paidMonths.push(m);
-      if(customAmt!==null) row.paidAmounts[m] = customAmt;
+      if(customAmt!==null) row.paidAmounts[m] = round2(customAmt);
       else delete row.paidAmounts[m];
     });
     row.balanceOverride = null;
@@ -1444,7 +1450,7 @@ function confirmPayAllMonth(){
     if(!r.paidMonths) r.paidMonths=[];
     if(!r.paidAmounts) r.paidAmounts={};
     if(!r.paidMonths.includes(monthName)) r.paidMonths.push(monthName);
-    r.paidAmounts[monthName] = getMonthAmount(r, monthName);
+    r.paidAmounts[monthName] = round2(getMonthAmount(r, monthName));
     r.balanceOverride = null;
     r.balanceStale = false;
   });
