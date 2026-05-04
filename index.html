@@ -89,12 +89,9 @@
   .del-btn:hover { color: var(--red); background: #fee2e2; }
   .table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; width: 100%; }
   table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
-  thead th {
-    padding: 9px 6px; text-align: left;
-    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
-    color: var(--text3); border-bottom: 0.5px solid var(--border);
-    background: var(--surface2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
+  thead th { text-align: left; padding: 9px 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); border-bottom: 0.5px solid var(--border); background: var(--surface2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  thead th[onclick]:hover { background: #e8edf5; color: var(--accent); }
+  .sort-arrow { font-size: 10px; margin-left: 2px; }
   tbody tr { transition: background 0.12s; }
   tbody tr:hover > td { background: #f8faff; }
   tbody td { padding: 7px 6px; border-bottom: 0.5px solid var(--border); vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -270,11 +267,11 @@
       <thead>
         <tr>
           <th style="width:2.5%"></th>
-          <th style="width:7%">Policy #</th>
-          <th style="width:7%">CAB #</th>
-          <th style="width:11%">Holder</th>
-          <th style="width:8%">Start</th>
-          <th style="width:8%">End</th>
+          <th style="width:7%;cursor:pointer;user-select:none;" onclick="sortBy('polnum')" id="th-polnum">Policy # <span class="sort-arrow"></span></th>
+          <th style="width:7%;cursor:pointer;user-select:none;" onclick="sortBy('cab')" id="th-cab">CAB # <span class="sort-arrow"></span></th>
+          <th style="width:11%;cursor:pointer;user-select:none;" onclick="sortBy('holder')" id="th-holder">Holder <span class="sort-arrow"></span></th>
+          <th style="width:8%;cursor:pointer;user-select:none;" onclick="sortBy('start')" id="th-start">Start <span class="sort-arrow"></span></th>
+          <th style="width:8%;cursor:pointer;user-select:none;" onclick="sortBy('end')" id="th-end">End <span class="sort-arrow"></span></th>
           <th style="width:7%">Annual</th>
           <th style="width:6%">Daily $</th>
           <th style="width:9%">Prorated Total</th>
@@ -309,6 +306,7 @@
 const ANNUAL = 3607;
 const STORAGE_KEY = 'policy_billing_db_v1';
 let rows = [], idCounter = 1, expanded = {};
+let sortField = 'cab', sortDir = 1; // default sort by CAB ascending
 
 function populateWorkingMonthDropdown(){
   const sel = document.getElementById('working-month');
@@ -637,15 +635,43 @@ function populateFilters(){
   endSel.innerHTML = '<option value="">All end dates</option>' + endDates.map(d=>`<option value="${d}"${d===curEnd?' selected':''}>${d}</option>`).join('');
 }
 
+function sortBy(field){
+  if(sortField===field) sortDir*=-1;
+  else{ sortField=field; sortDir=1; }
+  // Update header arrows
+  ['polnum','cab','holder','start','end'].forEach(f=>{
+    const th = document.getElementById('th-'+f);
+    if(th){
+      const arrow = th.querySelector('.sort-arrow');
+      if(arrow) arrow.textContent = f===sortField ? (sortDir===1?'▲':'▼') : '';
+      th.style.color = f===sortField ? 'var(--accent)' : '';
+    }
+  });
+  render();
+}
+
 function getFiltered(){
   const q=document.getElementById('search').value.toLowerCase();
   const fs=document.getElementById('filter-status').value;
   const fstart=document.getElementById('filter-start').value;
   const fend=document.getElementById('filter-end').value;
-  return rows.filter(r=>{
+  let filtered = rows.filter(r=>{
     const match=!q||r.cab.toLowerCase().includes(q)||r.holder.toLowerCase().includes(q)||r.polnum.toLowerCase().includes(q);
     return match&&(!fs||r.status===fs)&&(!fstart||r.start===fstart)&&(!fend||r.end===fend);
   });
+  // Apply sort
+  filtered.sort((a,b)=>{
+    let av = a[sortField]||'';
+    let bv = b[sortField]||'';
+    // Numeric sort for CAB numbers (strip TX)
+    if(sortField==='cab'){
+      av = parseInt(av.replace(/[^0-9]/g,''))||0;
+      bv = parseInt(bv.replace(/[^0-9]/g,''))||0;
+      return (av-bv)*sortDir;
+    }
+    return av.localeCompare(bv)*sortDir;
+  });
+  return filtered;
 }
 
 function renderSummary(){
@@ -1495,6 +1521,9 @@ function startApp(){
   populateWorkingMonthDropdown();
   loadData();
   render();
+  // Set initial sort arrow
+  const th = document.getElementById('th-cab');
+  if(th){ const arrow=th.querySelector('.sort-arrow'); if(arrow) arrow.textContent='▲'; th.style.color='var(--accent)'; }
 }
 var xlsxScript = document.createElement('script');
 xlsxScript.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
