@@ -856,6 +856,8 @@ function confirmDownloadCSV(){
   const csvRows=[headers.join(',')];
 
   getFiltered().forEach(r=>{
+    const c=calcRow(r);
+    const effectiveBal = r.balanceOverride!==null ? r.balanceOverride : (c.balance||0);
     const effectivePd = c.proratedTotal>0 ? (c.proratedTotal - effectiveBal) : 0;
 
     // Get this month amount for the selected month
@@ -863,7 +865,6 @@ function confirmDownloadCSV(){
     if(monthName){
       const schedEntry = c.schedule.find(s=>s.month===monthName);
       if(schedEntry){
-        // Use custom paid amount if set, otherwise scheduled amount
         thisMonthAmt = (r.paidAmounts && r.paidAmounts[monthName]!==undefined)
           ? r.paidAmounts[monthName]
           : schedEntry.amount;
